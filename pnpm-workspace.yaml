@@ -1,0 +1,3 @@
+packages:
+  - 'codebook-backend'
+  - 'codebook-frontend'
