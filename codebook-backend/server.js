@@ -17,6 +17,9 @@ const teamRoutes = require('./routes/teamRoutes');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 const projectRequestRoutes = require('./routes/projectRequestRoutes');
+const settingRoutes = require('./routes/settingRoutes');
+const testimonialRoutes = require('./routes/testimonialRoutes');
+const newsletterRoutes = require('./routes/newsletterRoutes');
 
 // Connect to database
 connectDB();
@@ -63,6 +66,9 @@ app.use('/api/team', teamRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/project-request', projectRequestRoutes);
+app.use('/api/settings', settingRoutes);
+app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
