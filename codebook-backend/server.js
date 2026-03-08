@@ -15,6 +15,8 @@ const portfolioRoutes = require('./routes/portfolioRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const authRoutes = require('./routes/authRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const projectRequestRoutes = require('./routes/projectRequestRoutes');
 
 // Connect to database
 connectDB();
@@ -59,6 +61,8 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/project-request', projectRequestRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

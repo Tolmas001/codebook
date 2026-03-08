@@ -149,6 +149,20 @@ const formConfigs = {
         { name: 'github', label: 'GitHub', type: 'url' },
         { name: 'twitter', label: 'Twitter', type: 'url' },
         { name: 'order', label: 'Tartib raqami', type: 'number' }
+    ],
+    blog: [
+        { name: 'title', label: 'Sarlavha', type: 'text', required: true },
+        { name: 'description', label: 'Qisqacha tavsif', type: 'textarea', required: true },
+        { name: 'content', label: 'Maqola matni', type: 'textarea', rows: 10, required: true },
+        { name: 'image', label: 'Rasm URL', type: 'url' },
+        { name: 'category', label: 'Kategoriya', type: 'select', options: ['development', 'design', 'marketing', 'news', 'tutorial', 'other'], required: true },
+        { name: 'tags', label: 'Taglar (vergul bilan)', type: 'text' },
+        { name: 'author', label: 'Muallif', type: 'text' },
+        { name: 'seoTitle', label: 'SEO Sarlavha', type: 'text' },
+        { name: 'seoDescription', label: 'SEO Tavsif', type: 'textarea' },
+        { name: 'seoKeywords', label: 'SEO Kalit sozlar', type: 'text' },
+        { name: 'isPublished', label: 'Nashr qilish', type: 'checkbox' },
+        { name: 'featured', label: 'Featured', type: 'checkbox' }
     ]
 };
 
@@ -195,6 +209,12 @@ function showSection(sectionId) {
             break;
         case 'team':
             loadTeam();
+            break;
+        case 'blog':
+            loadBlog();
+            break;
+        case 'projects':
+            loadProjects();
             break;
     }
 }
@@ -398,6 +418,124 @@ async function loadTeam() {
 }
 
 // ========================================
+// BLOG
+// ========================================
+async function loadBlog() {
+    try {
+        const response = await authFetch(`${API_BASE_URL}/blog/admin/all`);
+        const blog = response.ok ? await response.json() : [];
+
+        const container = document.getElementById('blog-cards');
+
+        if (blog.length === 0) {
+            container.innerHTML = '<div class="loading">Blog maqolalari yoq. Yangi maqola qoshing!</div>';
+            return;
+        }
+
+        container.innerHTML = blog.map(item => `
+            <div class="card">
+                <div class="card-image">
+                    <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.title}">
+                </div>
+                <div class="card-body">
+                    <h3>${item.title}</h3>
+                    <p>${item.description ? item.description.substring(0, 80) + '...' : ''}</p>
+                    <div class="card-footer">
+                        <span class="card-category">${item.category}</span>
+                        <span class="card-status">${item.isPublished ? 'Nashr qilingan' : 'Qoralama'}</span>
+                        <div class="action-btns">
+                            <button class="edit-btn" onclick="editItem('blog', '${item._id}')"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" onclick="deleteItem('blog', '${item._id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading blog:', error);
+    }
+}
+
+// ========================================
+// PROJECT REQUESTS
+// ========================================
+async function loadProjects() {
+    try {
+        const response = await authFetch(`${API_BASE_URL}/project-request`);
+        const projects = response.ok ? await response.json() : [];
+
+        const container = document.getElementById('projects-table-body');
+
+        if (projects.length === 0) {
+            container.innerHTML = '<tr><td colspan="10" class="loading">Loyiha sorovlari yoq</td></tr>';
+            return;
+        }
+
+        const statusColors = {
+            'new': '#ffc107',
+            'contacted': '#17a2b8',
+            'in-progress': '#007bff',
+            'completed': '#28a745',
+            'cancelled': '#dc3545'
+        };
+
+        const budgetLabels = {
+            'less-500': '< $500',
+            '500-1000': '$500 - $1000',
+            '1000-5000': '$1000 - $5000',
+            '5000-10000': '$5000 - $10000',
+            'more-10000': '> $10000',
+            'not-sure': 'Nomlum'
+        };
+
+        container.innerHTML = projects.map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.email}</td>
+                <td>${item.phone || '-'}</td>
+                <td>${item.company || '-'}</td>
+                <td>${item.projectType}</td>
+                <td>${budgetLabels[item.budget] || '-'}</td>
+                <td>${new Date(item.createdAt).toLocaleDateString()}</td>
+                <td><span class="status-badge" style="background: ${statusColors[item.status]}">${item.status}</span></td>
+                <td>
+                    <button class="edit-btn" onclick="editProjectStatus('${item._id}', '${item.status}')"><i class="fas fa-edit"></i></button>
+                    <button class="delete-btn" onclick="deleteItem('projects', '${item._id}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+async function refreshProjects() {
+    loadProjects();
+}
+
+async function editProjectStatus(id, currentStatus) {
+    const statuses = ['new', 'contacted', 'in-progress', 'completed', 'cancelled'];
+    const newStatus = prompt('Holatni tanlang (new, contacted, in-progress, completed, cancelled):', currentStatus);
+
+    if (newStatus && statuses.includes(newStatus)) {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/project-request/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                alert('Holat yangilandi!');
+                loadProjects();
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    }
+}
+
+// ========================================
 // MODAL
 // ========================================
 function openModal(section, item = null) {
@@ -510,6 +648,9 @@ document.getElementById('modal-form').addEventListener('submit', async (e) => {
                 case 'team':
                     loadTeam();
                     break;
+                case 'blog':
+                    loadBlog();
+                    break;
             }
             alert('Muvaffaqiyatli saqlandi!');
         } else {
@@ -558,6 +699,12 @@ async function deleteItem(section, id) {
                     break;
                 case 'team':
                     loadTeam();
+                    break;
+                case 'blog':
+                    loadBlog();
+                    break;
+                case 'projects':
+                    loadProjects();
                     break;
             }
             alert('Muvaffaqiyatli o\'chirildi!');

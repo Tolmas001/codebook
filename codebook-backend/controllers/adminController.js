@@ -72,6 +72,49 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+// @desc    Register new admin (only superadmin can create other admins)
+// @route   POST /api/auth/register
+// @access  Private (Superadmin only)
+exports.register = async (req, res) => {
+    try {
+        const { username, password, name, role } = req.body;
+
+        if (!username || !password || !name) {
+            return res.status(400).json({ message: 'Please provide all required fields' });
+        }
+
+        // Check if admin already exists
+        const adminExists = await Admin.findOne({ username });
+        if (adminExists) {
+            return res.status(400).json({ message: 'Admin already exists' });
+        }
+
+        // Only superadmin can create admins with specific roles
+        let newRole = 'manager';
+        if (req.admin.role === 'superadmin' && role) {
+            if (['admin', 'manager'].includes(role)) {
+                newRole = role;
+            }
+        }
+
+        const admin = await Admin.create({
+            username,
+            password,
+            name,
+            role: newRole
+        });
+
+        res.status(201).json({
+            _id: admin._id,
+            username: admin.username,
+            name: admin.name,
+            role: admin.role
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Create first admin (setup)
 // @route   POST /api/auth/setup
 // @access  Public (only if no admin exists)
